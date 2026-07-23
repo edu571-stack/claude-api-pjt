@@ -7,7 +7,9 @@ const { parseIngredients } = require('../src/utils/parseIngredients');
 const { parseRecipes, isValidRecipe } = require('../src/utils/parseRecipes');
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+// Vercel 서버리스 함수의 요청 본문 크기 제한(4.5MB)보다 여유 있게 낮춰,
+// 플랫폼이 아닌 서버 코드가 먼저 명확한 에러 메시지를 반환하게 한다.
+const MAX_FILE_SIZE_BYTES = 4 * 1024 * 1024;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -52,7 +54,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.post('/api/vision/recognize', (req, res) => {
   upload.single('image')(req, res, async (err) => {
     if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: '이미지 크기는 5MB를 초과할 수 없습니다.' });
+      return res.status(400).json({ error: '이미지 크기는 4MB를 초과할 수 없습니다.' });
     }
     if (err) {
       return res.status(400).json({ error: '지원하지 않는 이미지 형식입니다.' });
