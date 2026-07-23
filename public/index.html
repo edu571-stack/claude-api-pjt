@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>냉장고 레시피 도우미</title>
+<style>
+  :root {
+    --bg: #f6f4f0;
+    --surface: #ffffff;
+    --text: #2b2721;
+    --text-muted: #7a7469;
+    --border: #e6e1d8;
+    --accent: #d9782d;
+    --accent-contrast: #ffffff;
+    --tag-used-bg: #e7f3e8;
+    --tag-used-text: #2f6b3a;
+    --tag-missing-bg: #fbeee0;
+    --tag-missing-text: #9a5a1c;
+    --danger: #c1462f;
+    --shadow: 0 1px 2px rgba(30, 25, 15, 0.05), 0 8px 24px rgba(30, 25, 15, 0.06);
+    --radius: 14px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1a17;
+      --surface: #262320;
+      --text: #f0ece4;
+      --text-muted: #a39c8e;
+      --border: #3a352e;
+      --accent: #e8935a;
+      --accent-contrast: #201a12;
+      --tag-used-bg: #1f3324;
+      --tag-used-text: #8fd39c;
+      --tag-missing-bg: #3a2a17;
+      --tag-missing-text: #f0b678;
+      --danger: #e88068;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, "Pretendard", "Apple SD Gothic Neo", "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-size: 1.6rem;
+    margin: 0 0 6px;
+  }
+
+  header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card h2 {
+    font-size: 1.05rem;
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .dropzone:hover,
+  .dropzone.dragover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+  }
+
+  .dropzone input { display: none; }
+
+  .dropzone-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  #preview {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 10px;
+    margin-top: 16px;
+    display: none;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.05s ease;
+  }
+
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+  }
+
+  .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+
+  .btn-block { width: 100%; margin-top: 16px; }
+
+  .chip-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .chip-input-row input {
+    flex: 1;
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .chip-input-row button {
+    background: var(--border);
+    color: var(--text);
+    padding: 9px 16px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--tag-used-bg);
+    color: var(--tag-used-text);
+    padding: 6px 10px 6px 14px;
+    border-radius: 999px;
+    font-size: 0.88rem;
+  }
+
+  .chip button {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.6;
+  }
+
+  .chip button:hover { opacity: 1; }
+
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    margin: 2px 4px 2px 0;
+  }
+
+  .tag-used { background: var(--tag-used-bg); color: var(--tag-used-text); }
+  .tag-missing { background: var(--tag-missing-bg); color: var(--tag-missing-text); }
+
+  .recipe-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 14px;
+  }
+
+  .recipe-card:last-child { margin-bottom: 0; }
+
+  .recipe-title {
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0 0 4px;
+  }
+
+  .recipe-time {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    margin-bottom: 10px;
+  }
+
+  .recipe-tags { margin-bottom: 12px; }
+
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .steps li {
+    display: flex;
+    gap: 10px;
+    font-size: 0.92rem;
+    align-items: flex-start;
+  }
+
+  .steps li span.text { padding-top: 1px; }
+
+  .state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 20px 0;
+    font-size: 0.9rem;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 8px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-box {
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.88rem;
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🧊 냉장고 레시피 도우미</h1>
+    <p>냉장고 사진을 올리면 재료를 인식하고, 만들 수 있는 요리를 추천해드려요.</p>
+  </header>
+
+  <section class="card">
+    <h2>1. 냉장고 사진 업로드</h2>
+    <label class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" />
+      <div class="dropzone-label" id="dropzoneLabel">클릭하거나 사진을 끌어다 놓으세요 (jpg/png/webp, 5MB 이하)</div>
+      <img id="preview" alt="업로드한 사진 미리보기" />
+    </label>
+    <button class="btn-primary btn-block" id="recognizeBtn" disabled>재료 인식하기</button>
+    <div id="visionState"></div>
+  </section>
+
+  <section class="card hidden" id="ingredientsCard">
+    <h2>2. 인식된 재료</h2>
+    <div class="chips" id="chips"></div>
+    <div class="chip-input-row">
+      <input type="text" id="addIngredientInput" placeholder="재료 직접 추가하기" />
+      <button id="addIngredientBtn">추가</button>
+    </div>
+    <button class="btn-primary btn-block" id="generateBtn">이 재료로 레시피 추천받기</button>
+    <div id="recipeState"></div>
+  </section>
+
+  <section class="card hidden" id="recipesCard">
+    <h2>3. 추천 레시피</h2>
+    <div id="recipeList"></div>
+  </section>
+</main>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const dropzoneLabel = document.getElementById('dropzoneLabel');
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+  const recognizeBtn = document.getElementById('recognizeBtn');
+  const visionState = document.getElementById('visionState');
+
+  const ingredientsCard = document.getElementById('ingredientsCard');
+  const chipsEl = document.getElementById('chips');
+  const addIngredientInput = document.getElementById('addIngredientInput');
+  const addIngredientBtn = document.getElementById('addIngredientBtn');
+  const generateBtn = document.getElementById('generateBtn');
+  const recipeState = document.getElementById('recipeState');
+
+  const recipesCard = document.getElementById('recipesCard');
+  const recipeList = document.getElementById('recipeList');
+
+  let ingredients = [];
+
+  function setState(el, html) {
+    el.innerHTML = html;
+  }
+
+  function loadingHtml(text) {
+    return `<div class="state"><span class="spinner"></span>${text}</div>`;
+  }
+
+  function errorHtml(text) {
+    return `<div class="error-box">${text}</div>`;
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    dropzoneLabel.textContent = file.name;
+    recognizeBtn.disabled = false;
+    setState(visionState, '');
+  }
+
+  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+  ['dragover', 'dragenter'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    })
+  );
+  ['dragleave', 'drop'].forEach((evt) =>
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+    })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      fileInput.files = e.dataTransfer.files;
+      handleFile(file);
+    }
+  });
+
+  function renderChips() {
+    chipsEl.innerHTML = ingredients
+      .map(
+        (name, i) =>
+          `<span class="chip">${name}<button data-i="${i}" aria-label="삭제">✕</button></span>`
+      )
+      .join('');
+    chipsEl.querySelectorAll('button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        ingredients.splice(Number(btn.dataset.i), 1);
+        renderChips();
+      });
+    });
+  }
+
+  addIngredientBtn.addEventListener('click', () => {
+    const value = addIngredientInput.value.trim();
+    if (!value) return;
+    ingredients.push(value);
+    addIngredientInput.value = '';
+    renderChips();
+  });
+  addIngredientInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addIngredientBtn.click();
+    }
+  });
+
+  recognizeBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    recognizeBtn.disabled = true;
+    ingredientsCard.classList.add('hidden');
+    recipesCard.classList.add('hidden');
+    setState(visionState, loadingHtml('사진에서 재료를 인식하는 중...'));
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch('/api/vision/recognize', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setState(visionState, errorHtml(data.error || '인식에 실패했습니다.'));
+        return;
+      }
+
+      setState(visionState, '');
+      ingredients = data.ingredients || [];
+      renderChips();
+      ingredientsCard.classList.remove('hidden');
+      ingredientsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      setState(visionState, errorHtml('서버와 통신할 수 없습니다.'));
+    } finally {
+      recognizeBtn.disabled = false;
+    }
+  });
+
+  function renderRecipes(recipes) {
+    recipeList.innerHTML = recipes
+      .map(
+        (r) => `
+      <div class="recipe-card">
+        <p class="recipe-title">${r.title}</p>
+        ${r.estimatedCookTimeMinutes ? `<p class="recipe-time">⏱ 약 ${r.estimatedCookTimeMinutes}분</p>` : ''}
+        <div class="recipe-tags">
+          ${(r.usedIngredients || []).map((i) => `<span class="tag tag-used">${i}</span>`).join('')}
+          ${(r.missingIngredients || []).map((i) => `<span class="tag tag-missing">+ ${i}</span>`).join('')}
+        </div>
+        <ol class="steps">
+          ${(r.steps || [])
+            .map((s, i) => `<li><span class="step-badge">${i + 1}</span><span class="text">${s}</span></li>`)
+            .join('')}
+        </ol>
+      </div>`
+      )
+      .join('');
+  }
+
+  generateBtn.addEventListener('click', async () => {
+    if (ingredients.length === 0) return;
+    generateBtn.disabled = true;
+    recipesCard.classList.add('hidden');
+    setState(recipeState, loadingHtml('레시피를 생성하는 중... (최대 1분 정도 걸릴 수 있어요)'));
+
+    try {
+      const res = await fetch('/api/recipes/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        setState(recipeState, errorHtml(data.error || '레시피 생성에 실패했습니다.'));
+        return;
+      }
+
+      setState(recipeState, '');
+      renderRecipes(data.recipes);
+      recipesCard.classList.remove('hidden');
+      recipesCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      setState(recipeState, errorHtml('서버와 통신할 수 없습니다.'));
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
