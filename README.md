@@ -17,12 +17,15 @@
 ## 프로젝트 구조
 
 ```
-├── server/index.js               # Express 서버, API 라우트
+├── server/app.js                  # Express 앱 정의, API 라우트
+├── server/index.js               # 로컬 개발 서버 진입점 (app.listen)
+├── api/index.js                  # Vercel 서버리스 함수 진입점
 ├── src/services/openrouterClient.js  # OpenRouter API 호출
 ├── src/utils/parseIngredients.js     # 재료 인식 응답 파싱
 ├── src/utils/parseRecipes.js         # 레시피 생성 응답 파싱/검증
 ├── public/index.html             # 프론트엔드 UI
 ├── config.js                     # 환경 변수 로드/검증
+├── vercel.json                    # Vercel 라우팅 설정
 ├── scripts/test-connection.js    # OpenRouter API 연결 테스트 스크립트
 └── docs/PRD_01~03.md             # 기능별 PRD 문서
 ```
@@ -94,3 +97,14 @@ npm run test:openrouter
 ```
 
 자세한 기능 명세는 [`docs/`](./docs) 디렉터리의 PRD 문서를 참고하세요.
+
+## Vercel 배포
+
+1. [vercel.com](https://vercel.com)에 로그인 후 **Add New → Project**에서 이 GitHub 저장소(`claude-api-pjt`)를 Import합니다.
+2. Project Settings → **Environment Variables**에 아래 값을 등록합니다.
+   - `OPENROUTER_API_KEY` (필수)
+   - `OPENROUTER_VISION_MODEL` (선택, 기본값 사용 시 생략 가능)
+   - `OPENROUTER_TEXT_MODEL` (선택, 기본값 사용 시 생략 가능)
+3. Deploy를 누르면 `vercel.json`의 라우팅 설정에 따라 `api/index.js`(Express 앱)로 모든 요청이 전달됩니다.
+
+> 참고: Vercel Hobby 플랜은 서버리스 함수 실행 시간이 기본 10초로 제한됩니다. 레시피 생성처럼 응답이 오래 걸리는 요청은 타임아웃이 발생할 수 있어, 필요 시 Pro 플랜의 `maxDuration` 설정을 고려하세요.
